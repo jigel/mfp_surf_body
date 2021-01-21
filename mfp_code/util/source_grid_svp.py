@@ -376,7 +376,7 @@ def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gam
     
     #print('Final number of gridpoints:',np.size(final_grid_lon))
 
-    return list((final_grid_lon,final_grid_lat))
+    return list((final_grid_lat,final_grid_lon))
     
 
 

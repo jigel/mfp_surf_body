@@ -4,8 +4,8 @@ project_name: 0121_mfp_stat_phase_test
 # In which folder do you want to save it?
 output_path: ./mfp_output
 
-# Where are the cross-correlations that should be used?
-correlation_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0119_phase_tests/0119_mfp_30deg_Gauss_test_medium/corr_ones
+# Where are the cross-correlations that should be used? Set to null if stationary phases are to be computed.
+correlation_path: null
 
 # What file format are they? List with, e.g., ["SAC","sac"]
 corr_format: ["SAC","sac"]
@@ -35,9 +35,9 @@ svp_grid_config:
     svp_lon_0: # Centre of the spatially variable grid (or grids if multiple are given)
     - 8
     svp_phi_min: # Minimum grid point distance in degrees
-    - 2
+    - 10
     svp_phi_max: # Maximum grid point distance in degrees
-    - 2
+    - 10
     svp_sigma: # Radius of area (in degrees) of high grid point density
     - 20
 
@@ -46,7 +46,7 @@ method: ["basic","envelope"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
 stationary_phases: True
-stat_phase_input: Gauss
+stat_phase_input: ricker
 stat_phase_npts: 5000
 stat_phase_dt: 1
 
