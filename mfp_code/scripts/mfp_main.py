@@ -203,7 +203,7 @@ def run_mfp(args,comm,size,rank):
                         if meth == "basic":
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data[corr_idx]
                         elif meth == "envelope":
-                            MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data_env[corr_idx]
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx]
                         else:
                             print(f"{meth} not implemented.")
                         
