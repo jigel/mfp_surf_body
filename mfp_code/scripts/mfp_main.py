@@ -97,11 +97,19 @@ def run_mfp(args,comm,size,rank):
     
     # initiate dictionary for MFP phase maps
     # content is grid[0],grid[1],basic,envelope
-    MFP_phases_dict = dict()
-    
-    for phases in args.phase_pair_list:
-        MFP_phases_dict[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
-    
+    if args.stationary_phases:
+        MFP_phases_dict = dict()
+
+        for phases in args.phase_pair_list:
+            MFP_phases_dict[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+
+    # different dictionary if we're just doing a simple MFP for individual phases separately
+    else: 
+        MFP_dict = dict()
+        
+        for phase in args.phases:
+            MFP_dict[f'{phase}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+
     
     for i,corr in enumerate(corr_files_split):
         
@@ -126,8 +134,8 @@ def run_mfp(args,comm,size,rank):
             else:
                 tr_corr = obspy.read(corr)[0]
     
+    
         ## NEED TO MAYBE IMPLEMENT NORMALISATION HERE
-        
         # get data and envelope
         data = tr_corr.data
         data_env = envelope(data)
@@ -206,8 +214,74 @@ def run_mfp(args,comm,size,rank):
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx]
                         else:
                             print(f"{meth} not implemented.")
+                            
+                            
+        # If only a simple MFP is performed              
+        else:
+            for phase in args.phases:
+
+
+                # load grid from dictionary
+                mfp_grid = np.asarray([MFP_dict[f"{phase}"][0],MFP_dict[f"{phase}"][1]])
+
+
+                # iterate over each grid point and calculate arrival time
+                for k in range(np.size(mfp_grid[0])):
+                    
+                    g_point = [mfp_grid[0][k],mfp_grid[1][k]]
+
+
+                    lat_1,lon_1 = stat_dict[stat_1][0],stat_dict[stat_1][1]
+                    lat_2,lon_2 = stat_dict[stat_2][0],stat_dict[stat_2][1]
+
+                    # calculate distances
+                    dist_1 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_1,lon_1)[0]/1000)
+                    dist_2 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_2,lon_2)[0]/1000)
+
+
+                    # calculate arrival times to each station for the two phases
+                    arr_1 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_1,phase_list=[phase])
+
+                    # if there is no arrival, skip this one
+                    if len(arr_1) == 0:
+                        continue
+                    else:
+                        # Use the first arrival
+                        arr_1_val = arr_1[0].time
+
+                    arr_2 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_2,phase_list=[phase])
+
+                    # if there is no arrival, skip this one
+                    if len(arr_2) == 0:
+                        continue
+                    else:
+                        # Use the first arrival
+                        arr_2_val = arr_2[0].time
+
                         
+                    # get the expected arrival in the correlation
+                    # Check here if it's the right way around
+                    arr_diff = arr_2_val-arr_1_val
+                    
+                    # If the arrival time is outside the correlation, skip
+                    if np.abs(arr_diff) > np.max(np.abs(time)):
+                        continue
                         
+                    # get the index in the correlation
+                    corr_idx = np.argmin(np.abs(arr_diff-time),axis=0)
+                    
+                    # get values and add to distribution 
+                    for meth in args.method:
+                        # basic is dictionary index 2
+                        # envelope is dictionary index 3
+                        if meth == "basic":
+                            MFP_dict[f"{phase}"][2][k] += data[corr_idx]
+                        elif meth == "envelope":
+                            MFP_dict[f"{phase}"][3][k] += data_env[corr_idx]
+                        else:
+                            print(f"{meth} not implemented.")
+            
+            
                         
     # MPI NEED TO GATHER AND ADD
     comm.Barrier()
@@ -215,32 +289,50 @@ def run_mfp(args,comm,size,rank):
     if rank == 0:
         print("Matched Field Processing done.")
     
-    
-    MFP_phases_dict_all = comm.gather(MFP_phases_dict,root = 0)
-    
+    if args.stationary_phases:
+        MFP_phases_dict_all = comm.gather(MFP_phases_dict,root = 0)
+    else:
+        MFP_dict_all = comm.gather(MFP_dict,root = 0)
+
     # expand the dictionary
     if rank == 0:
-        
-        MFP_phases_dict_exp = dict()
-        
-        for phases in args.phase_pair_list:
-            MFP_phases_dict_exp[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
-        
-        for subdict in MFP_phases_dict_all:
-            for phases in subdict:
-                # add the MFP maps from the different ranks
-                MFP_phases_dict_exp[phases][2] += subdict[phases][2]
-                MFP_phases_dict_exp[phases][3] += subdict[phases][3]
-    
+        if args.stationary_phases:
+            MFP_phases_dict_exp = dict()
+
+            for phases in args.phase_pair_list:
+                MFP_phases_dict_exp[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+
+            for subdict in MFP_phases_dict_all:
+                for phases in subdict:
+                    # add the MFP maps from the different ranks
+                    MFP_phases_dict_exp[phases][2] += subdict[phases][2]
+                    MFP_phases_dict_exp[phases][3] += subdict[phases][3]
+        else:
+            MFP_dict_exp = dict()
+
+            for phase in args.phases:
+                MFP_dict_exp[f'{phase}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+
+            for subdict in MFP_dict_all:
+                for phase in subdict:
+                    # add the MFP maps from the different ranks
+                    MFP_dict_exp[phase][2] += subdict[phase][2]
+                    MFP_dict_exp[phase][3] += subdict[phase][3]
     else:
-        MFP_phases_dict_exp = dict()
+        if args.stationary_phases:
+            MFP_phases_dict_exp = dict()
+        else:
+            MFP_dict_exp = dict()
     
     comm.Barrier()
     
-    MFP_phases_dict_exp = comm.bcast(MFP_phases_dict_exp,root=0)
+    if args.stationary_phases:
+        MFP_phases_dict_exp = comm.bcast(MFP_phases_dict_exp,root=0)
+        MFP_final = MFP_phases_dict_exp
+        
+    else:
+        MFP_dict_exp = comm.bcast(MFP_dict_exp,root=0)
+        MFP_final = MFP_dict_exp
 
-    #print(MFP_phases_dict_exp)
-
-    #print(MFP_phases_dict)
     
-    return MFP_phases_dict_exp
+    return MFP_final
