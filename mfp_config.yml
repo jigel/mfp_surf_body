@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0122_mfp_stat_phase_test_gauss_causal_1
+project_name: 0122_mfp_stat_phase_test_ricker_both
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -46,13 +46,13 @@ method: ["basic","envelope"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
 stationary_phases: True
-stat_phase_input: gauss
+stat_phase_input: ricker
 stat_phase_npts: 5000
 stat_phase_dt: 1
 # set sigma here (in seconds if dt = 1). For Gauss is the variance, for Ricker the width parameter of the wavelet.
 stat_phase_sigma: 50
 # should it be on the causal, acausal, or both sides of the correlation?
-stat_phase_caus: causal
+stat_phase_caus: both
 
 # What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
 bandpass_filter: null

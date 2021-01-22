@@ -166,8 +166,6 @@ if rank == 0:
     t_1 = time.time()
     run_time.write(f"Project setup: {np.around((t_1-t_0)/60,4)} min \n")
     
-    
-    
     #### Check memory usage
     print("Memory usage in Gb at start ", process.memory_info().rss / 1.e9)
     run_time.write(f"Memory usage in Gb at start {process.memory_info().rss / 1.e9} \n")
@@ -231,6 +229,14 @@ else:
     mfp_args.main_phases = [0]
     
 
+if rank == 0:
+    t_2 = time.time()
+    run_time.write(f"Before MFP: {np.around((t_2-t_1)/60,4)} min \n")
+
+    #### Check memory usage
+    print("Memory usage in Gb before MFP ", process.memory_info().rss / 1.e9)
+    run_time.write(f"Memory usage in Gb before MFP {process.memory_info().rss / 1.e9} \n")
+
     
 ### DO MFP
 ## Instead of iterating over the grid, iterate over the correlations
@@ -292,13 +298,21 @@ for phase in mfp_args.main_phases:
                           stationlist_path=mfp_args.stationlist_path)
                 
                 
-        
-
-
+    
             
 comm.Barrier()
 
+
 if rank == 0:
+    t_3 = time.time()
+    run_time.write(f"After MFP: {np.around((t_3-t_2)/60,4)} min \n")
+    run_time.write(f"Total runtime: {np.around((t_3-t_0)/60,4)} min \n")
+
+    #### Check memory usage
+    print("Memory usage in Gb after MFP ", process.memory_info().rss / 1.e9)
+    run_time.write(f"Memory usage in Gb after MFP {process.memory_info().rss / 1.e9} \n")
+    run_time.close()
+    
     print("===="*20)
     print(f"MFP done.")
     print(f"Results in {mfp_result_path}")

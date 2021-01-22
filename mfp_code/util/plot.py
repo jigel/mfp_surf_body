@@ -35,7 +35,8 @@ def plot_grid(grid,data=None,output_file=None,triangulate=False,cbar=False,only_
     if only_ocean:
         ax.add_feature(cfeature.NaturalEarthFeature('cultural', 'admin_0_countries', '50m', edgecolor='black', facecolor=cfeature.COLORS['land']),zorder=2)
     else:
-        ax.coastlines(color='k')
+        ax.add_feature(cfeature.COASTLINE,edgecolor='k',linewidth=3)
+        ax.add_feature(cfeature.COASTLINE,edgecolor='w',linewidth=1)
         
     if triangulate:
         grid_tri = tri.Triangulation(grid[1],grid[0])
