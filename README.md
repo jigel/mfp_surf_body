@@ -18,7 +18,8 @@ Clone this repository and go to the folder. Run:
 
 pip install -v -e .
 
-## Run Code
+## Run Example
+
 To run a test case for either simple MFP or stationary phase MFP run:
 
 python run_mfp.py mfp_example/mfp_config_simple.yml
@@ -28,7 +29,7 @@ or
 python run_mfp.py mfp_example/mfp_config_stationary_phase.yml
 
 
-
+## Change parameters
 
 To set your own parameters, edit the mfp_config.yml file. The different parameters are explained in the config file. 
 
