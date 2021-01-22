@@ -13,6 +13,8 @@ Match Field Processing for stationary phases
 - mpi4py
 - obspy
 
+Note that obspy doesn't seem to work with python 3.9
+
 ## Install
 Clone this repository and go to the folder. Run:
 
