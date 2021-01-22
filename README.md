@@ -31,6 +31,9 @@ python run_mfp.py mfp_example/mfp_config_stationary_phase.yml
 
 
 To set your own parameters, edit the mfp_config.yml file. The different parameters are explained in the config file. 
+
+python run_mfp.py mfp_config.yml
+
 The code can also be run with mpi:
 
 mpirun -np {number of cores} python run_mfp.py mfp_config.yml
