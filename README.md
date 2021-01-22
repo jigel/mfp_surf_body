@@ -22,8 +22,13 @@ pip install -v -e .
 To run a test case for either simple MFP or stationary phase MFP run:
 
 python run_mfp.py mfp_example/mfp_config_simple.yml
+
 or
+
 python run_mfp.py mfp_example/mfp_config_stationary_phase.yml
+
+
+
 
 To set your own parameters, edit the mfp_config.yml file. The different parameters are explained in the config file. 
 The code can also be run with mpi:
