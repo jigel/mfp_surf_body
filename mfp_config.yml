@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0122_mfp_stat_phase_test_ricker_both
+project_name: 0122_mfp_stat_phase_test_ricker_both_TEST_print
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -21,6 +21,7 @@ station_distance_max: 0
 sourcegrid_path: svp_grid
 
 # If svp_grid: need to set parameters below
+# If you want a (quasi) homogeneous grid just set svp_phi_min = svp_phi_max at the desired grid point distance
 svp_grid_config:
     svp_dense_antipole: false # flips the grid at the equator before rotating it, i.e. both sides are the same
     svp_only_ocean: false # If true removes all grid points on land 
@@ -45,7 +46,7 @@ svp_grid_config:
 method: ["basic","envelope"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
-stationary_phases: True
+stationary_phases: False
 stat_phase_input: ricker
 stat_phase_npts: 5000
 stat_phase_dt: 1

@@ -17,7 +17,7 @@ print = functools.partial(print, flush=True)
 from mfp_code.scripts.create_sourcegrid import create_sourcegrid
 from mfp_code.util.plot import plot_grid
 from mfp_code.scripts.create_stat_phase_synthetics import create_synth
-from mfp_code.scripts.mfp_main import run_mfp
+from mfp_code.scripts.mfp_main import mfp
 
 # plotting
 import matplotlib.pyplot as plt
@@ -76,6 +76,11 @@ with open(sys.argv[1]) as f:
     
 for attr in mfp_config:
     setattr(mfp_args,attr,mfp_config[attr])
+    
+    
+# perform some checks before starting
+if not mfp_args.stationary_phases and mfp_args.correlation_path is None:
+    raise Exception('Need to set correlation path if stationary_phases is False.')
     
     
 # Make project folder and copy files there
@@ -251,7 +256,7 @@ for phase in mfp_args.main_phases:
         mfp_args.correlation_path = os.path.join(mfp_args.project_path,f'corr_stat_phase_{phase}_{mfp_args.stat_phase_input.lower()}')
 
     # run matched field processing
-    mfp = run_mfp(mfp_args,comm,size,rank)
+    mfp = mfp(mfp_args,comm,size,rank)
 
 
     # save the different mfp maps and plot

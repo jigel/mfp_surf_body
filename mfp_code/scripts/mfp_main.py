@@ -17,7 +17,7 @@ import psutil
 process = psutil.Process(os.getpid())
 
 
-def run_mfp(args,comm,size,rank):
+def mfp(args,comm,size,rank):
     """
     Matched Field Processing
     """
@@ -149,7 +149,7 @@ def run_mfp(args,comm,size,rank):
 
         
         
-        for phase in args.phase_list:
+        for it,phase in enumerate(args.phase_list):
 
             if args.stationary_phases:
                 phase_1 = phase[0]
@@ -165,6 +165,12 @@ def run_mfp(args,comm,size,rank):
 
             # iterate over each grid point and calculate arrival time
             for k in range(np.size(mfp_grid[0])):
+                
+                if k%100 == 0 and rank == 0 and args.stationary_phases:
+                    print(f"At {k} of {np.size(mfp_grid[0])} gridpoints for phase {it+1} of {int(np.size(args.phase_list)/2)} on rank {rank}".ljust(100,' '),end="\r", flush=True)
+                    
+                if k%100 == 0 and rank == 0 and not args.stationary_phases:
+                    print(f"At {k} of {np.size(mfp_grid[0])} gridpoints for phase {it+1} of {int(np.size(args.phase_list))} on rank {rank}".ljust(100,' '),end="\r", flush=True)
 
                 g_point = [mfp_grid[0][k],mfp_grid[1][k]]
 
@@ -275,7 +281,7 @@ def run_mfp(args,comm,size,rank):
     comm.Barrier()
     
     if rank == 0:
-        print("Matched Field Processing done.")
+        print("Matched Field Processing done.".ljust(100,' '))
     
     if args.stationary_phases:
         MFP_phases_dict_all = comm.gather(MFP_phases_dict,root = 0)
