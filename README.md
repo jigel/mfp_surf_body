@@ -14,7 +14,7 @@ Match Field Processing for stationary phases
 - obspy
 
 ## Install
-Clone this repository and go to the folder. Run:
+Clone this repository, install packages above and go to the folder to run:
 
 pip install -v -e .
 
