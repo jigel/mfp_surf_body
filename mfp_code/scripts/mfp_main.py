@@ -113,7 +113,7 @@ def mfp(args,comm,size,rank):
     
     for i,corr in enumerate(corr_files_split):
         
-        if i%100 == 0 and rank == 0:
+        if i%1 == 0 and rank == 0:
             print(f"At {i} of {np.size(corr_files_split)} correlations on rank {rank}")
 
         file_name = os.path.basename(corr)

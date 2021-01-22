@@ -59,7 +59,7 @@ def plot_grid(grid,data=None,output_file=None,triangulate=False,cbar=False,only_
         stationlist = read_csv(stationlist_path)
         lat = stationlist['lat']
         lon = stationlist['lon']
-        plt.scatter(lon,lat,c='lawngreen',s=100,marker='^',
+        plt.scatter(lon,lat,c='lawngreen',s=200,marker='^',
                     edgecolor='k',linewidth=2,transform=ccrs.PlateCarree(),zorder=3)
         
 

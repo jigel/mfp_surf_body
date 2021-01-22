@@ -57,13 +57,11 @@ class args(object):
         self.sourcegrid_path = None
         self.svp_grid_config = None
         self.method = None
-        #self.t_window = None
         self.stationary_phases = None
         self.stat_phase_input = None 
         self.bandpass_filter = [0.1,0.2,5]
         self.taup_model = 'iasp91'
         self.phases = ['3kmps','P']
-        #self.smoothing = 2
         self.plot = True
         
         
@@ -81,6 +79,9 @@ for attr in mfp_config:
 # perform some checks before starting
 if not mfp_args.stationary_phases and mfp_args.correlation_path is None:
     raise Exception('Need to set correlation path if stationary_phases is False.')
+    
+mfp_args.output_path = os.path.abspath(mfp_args.output_path)
+mfp_args.stationlist_path = os.path.abspath(mfp_args.stationlist_path)
     
     
 # Make project folder and copy files there
@@ -168,6 +169,7 @@ if not grid_val:
 if rank == 0:
     run_time = open(os.path.join(mfp_args.project_path,'runtime.txt'),'w+')
     run_time.write(f"Number of cores: {size} \n")
+    run_time.write(f"Number of grid points: {np.size(sourcegrid[0])}\n")
     t_1 = time.time()
     run_time.write(f"Project setup: {np.around((t_1-t_0)/60,4)} min \n")
     
@@ -228,6 +230,7 @@ if mfp_args.stationary_phases:
 
 # if it's not a stationary phase run, make phase list from normal phases
 else:
+    mfp_args.correlation_path = os.path.abspath(mfp_args.correlation_path)
     mfp_args.phase_list = mfp_args.phases
     
     # To make sure it doesn't loop 

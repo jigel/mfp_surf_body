@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name = 'mfp_stationary_phases',
     version = '0.0.0a0',
-    description = 'Match Field Processing for stationary phases',
+    description = 'Matched Field Processing for stationary phases',
     #long_description =
     # url = 
     author = 'J.Igel, D.Bowden, K.Sager, A.Fichtner',
@@ -15,7 +15,7 @@ setup(
         'Topic :: Seismology',
         'Programming Language :: Python :: 3',
     ],
-    keywords = 'match field processing',
+    keywords = 'matched field processing',
     packages = find_packages(),
     #package_data = ,
     install_requires = [
@@ -24,7 +24,9 @@ setup(
         "cartopy",
         "pandas",
         "pyyaml",
-        "h5py",
+        "matplotlib",
         "pandas",
-        "obspy"],
+        "obspy",
+        "mpi4py",
+        "cmasher"],
 )

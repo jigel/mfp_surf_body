@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0122_mfp_stat_phase_test_ricker_both_TEST_print
+project_name: 0122_mfp_stat_phase_30deg_P_PP_sigma_5
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -11,7 +11,7 @@ correlation_path: null
 corr_format: ["SAC","sac"]
 
 # Which stations am I using?
-stationlist_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0119_phase_tests/0119_mfp_30deg_Gauss_test_medium/stationlist.csv 
+stationlist_path: /Users/jigel/noisi/mfp_stationary_phases/mfp_example/stationlist.csv
 
 # Do you want to set a minimum and maximum inter-station distance? It's in degrees. Set to both to 0 or null if you want to use all cross-correlations.
 station_distance_min: 0
@@ -36,9 +36,9 @@ svp_grid_config:
     svp_lon_0: # Centre of the spatially variable grid (or grids if multiple are given)
     - 8
     svp_phi_min: # Minimum grid point distance in degrees
-    - 4
+    - 2
     svp_phi_max: # Maximum grid point distance in degrees
-    - 4
+    - 2
     svp_sigma: # Radius of area (in degrees) of high grid point density
     - 20
 
@@ -46,12 +46,13 @@ svp_grid_config:
 method: ["basic","envelope"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
-stationary_phases: False
+stationary_phases: True
 stat_phase_input: ricker
+# Parameters for the synthetic correlations, number of points (npts) and delta between points (dt)
 stat_phase_npts: 5000
 stat_phase_dt: 1
 # set sigma here (in seconds if dt = 1). For Gauss is the variance, for Ricker the width parameter of the wavelet.
-stat_phase_sigma: 50
+stat_phase_sigma: 5
 # should it be on the causal, acausal, or both sides of the correlation?
 stat_phase_caus: both
 
