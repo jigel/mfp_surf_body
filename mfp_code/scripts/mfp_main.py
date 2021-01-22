@@ -100,7 +100,7 @@ def run_mfp(args,comm,size,rank):
     if args.stationary_phases:
         MFP_phases_dict = dict()
 
-        for phases in args.phase_pair_list:
+        for phases in args.phase_list:
             MFP_phases_dict[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
 
     # different dictionary if we're just doing a simple MFP for individual phases separately
@@ -148,66 +148,102 @@ def run_mfp(args,comm,size,rank):
         time = np.linspace(-time_shift,time_shift,npts)
 
         
-        if args.stationary_phases:
         
-            for phases in args.phase_pair_list:
+        for phase in args.phase_list:
 
-                phase_1 = phases[0]
-                phase_2 = phases[1]
+            if args.stationary_phases:
+                phase_1 = phase[0]
+                phase_2 = phase[1]
 
                 # load grid from dictionary
                 mfp_grid = np.asarray([MFP_phases_dict[f"{phase_1}-{phase_2}"][0],MFP_phases_dict[f"{phase_1}-{phase_2}"][1]])
 
-
-                # iterate over each grid point and calculate arrival time
-                for k in range(np.size(mfp_grid[0])):
-                    
-                    g_point = [mfp_grid[0][k],mfp_grid[1][k]]
+            else:
+                # load grid from dictionary
+                mfp_grid = np.asarray([MFP_dict[f"{phase}"][0],MFP_dict[f"{phase}"][1]])
 
 
-                    lat_1,lon_1 = stat_dict[stat_1][0],stat_dict[stat_1][1]
-                    lat_2,lon_2 = stat_dict[stat_2][0],stat_dict[stat_2][1]
+            # iterate over each grid point and calculate arrival time
+            for k in range(np.size(mfp_grid[0])):
 
-                    # calculate distances
-                    dist_1 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_1,lon_1)[0]/1000)
-                    dist_2 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_2,lon_2)[0]/1000)
+                g_point = [mfp_grid[0][k],mfp_grid[1][k]]
 
 
-                    # calculate arrival times to each station for the two phases
+                lat_1,lon_1 = stat_dict[stat_1][0],stat_dict[stat_1][1]
+                lat_2,lon_2 = stat_dict[stat_2][0],stat_dict[stat_2][1]
+
+                
+                # calculate distances
+                dist_1_m = gps2dist_azimuth(g_point[0],g_point[1],lat_1,lon_1)[0]
+                dist_2_m = gps2dist_azimuth(g_point[0],g_point[1],lat_2,lon_2)[0]
+                
+                dist_1 = kilometers2degrees(dist_1_m/1000)
+                dist_2 = kilometers2degrees(dist_2_m/1000)
+
+
+                # calculate arrival times to each station for the two phases
+                if args.stationary_phases:
                     arr_1 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_1,phase_list=[phase_1])
+                else:
+                    # calculate arrival times to each station for the two phases
+                    arr_1 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_1,phase_list=[phase])
 
-                    # if there is no arrival, skip this one
-                    if len(arr_1) == 0:
-                        continue
-                    else:
-                        # Use the first arrival
-                        arr_1_val = arr_1[0].time
+                    
+                # if there is no arrival, skip this one
+                if len(arr_1) == 0:
+                    continue
+                else:
+                    # Use the first arrival
+                    arr_1_val = arr_1[0].time
 
+                    
+                if args.stationary_phases:
                     arr_2 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_2,phase_list=[phase_2])
+                else:
+                    arr_2 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_2,phase_list=[phase])
 
-                    # if there is no arrival, skip this one
-                    if len(arr_2) == 0:
-                        continue
+
+                # if there is no arrival, skip this one
+                if len(arr_2) == 0:
+                    continue
+                else:
+                    # Use the first arrival
+                    arr_2_val = arr_2[0].time
+
+
+                # get the expected arrival in the correlation
+                # Check here if it's the right way around
+                arr_diff = arr_2_val-arr_1_val
+
+                # If the arrival time is outside the correlation, skip
+                if np.abs(arr_diff) > np.max(np.abs(time)):
+                    continue
+
+                # get the index in the correlation
+                corr_idx = np.argmin(np.abs(arr_diff-time),axis=0)
+                
+                # geometric spreading for surface waves
+                            
+                if args.geo_spreading and phase.endswith('kmps'):
+                    
+                    g_speed = float(phase.split('kmps')[0])*1000
+                    # geometric spreading term
+                    geo_dist_var = np.abs(dist_2_m + dist_1_m)/(2*1000) # average distance same units as speed
+                    
+                    if args.bandpass_filter is not None:
+                        omega = (args.bandpass_filter[0]+args.bandpass_filter[1])/2
                     else:
-                        # Use the first arrival
-                        arr_2_val = arr_2[0].time
-
+                        if k == 0 and rank == 0:
+                            print('No bandpass filter. Using 0.1 Hz as frequency for geometric spreading.')
+                        omega = 0.1
                         
-                    # get the expected arrival in the correlation
-                    # Check here if it's the right way around
-                    arr_diff = arr_2_val-arr_1_val
-                    
-                    # If the arrival time is outside the correlation, skip
-                    if np.abs(arr_diff) > np.max(np.abs(time)):
-                        continue
-                        
-                    # get the index in the correlation
-                    corr_idx = np.argmin(np.abs(arr_diff-time),axis=0)
-                    
-                    # get values and add to distribution 
-                    for meth in args.method:
-                        # basic is dictionary index 2
-                        # envelope is dictionary index 3
+                    A = np.sqrt((2*g_speed)/(np.pi*omega*geo_dist_var))
+                
+                # get values and add to distribution 
+                for meth in args.method:
+                    # basic is dictionary index 2
+                    # envelope is dictionary index 3
+                    if args.stationary_phases:
                         if meth == "basic":
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data[corr_idx]
                         elif meth == "envelope":
@@ -215,71 +251,23 @@ def run_mfp(args,comm,size,rank):
                         else:
                             print(f"{meth} not implemented.")
                             
-                            
-        # If only a simple MFP is performed              
-        else:
-            for phase in args.phases:
-
-
-                # load grid from dictionary
-                mfp_grid = np.asarray([MFP_dict[f"{phase}"][0],MFP_dict[f"{phase}"][1]])
-
-
-                # iterate over each grid point and calculate arrival time
-                for k in range(np.size(mfp_grid[0])):
-                    
-                    g_point = [mfp_grid[0][k],mfp_grid[1][k]]
-
-
-                    lat_1,lon_1 = stat_dict[stat_1][0],stat_dict[stat_1][1]
-                    lat_2,lon_2 = stat_dict[stat_2][0],stat_dict[stat_2][1]
-
-                    # calculate distances
-                    dist_1 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_1,lon_1)[0]/1000)
-                    dist_2 = kilometers2degrees(gps2dist_azimuth(g_point[0],g_point[1],lat_2,lon_2)[0]/1000)
-
-
-                    # calculate arrival times to each station for the two phases
-                    arr_1 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_1,phase_list=[phase])
-
-                    # if there is no arrival, skip this one
-                    if len(arr_1) == 0:
-                        continue
                     else:
-                        # Use the first arrival
-                        arr_1_val = arr_1[0].time
-
-                    arr_2 = model.get_travel_times(source_depth_in_km=0,distance_in_degree=dist_2,phase_list=[phase])
-
-                    # if there is no arrival, skip this one
-                    if len(arr_2) == 0:
-                        continue
-                    else:
-                        # Use the first arrival
-                        arr_2_val = arr_2[0].time
-
-                        
-                    # get the expected arrival in the correlation
-                    # Check here if it's the right way around
-                    arr_diff = arr_2_val-arr_1_val
-                    
-                    # If the arrival time is outside the correlation, skip
-                    if np.abs(arr_diff) > np.max(np.abs(time)):
-                        continue
-                        
-                    # get the index in the correlation
-                    corr_idx = np.argmin(np.abs(arr_diff-time),axis=0)
-                    
-                    # get values and add to distribution 
-                    for meth in args.method:
-                        # basic is dictionary index 2
-                        # envelope is dictionary index 3
-                        if meth == "basic":
-                            MFP_dict[f"{phase}"][2][k] += data[corr_idx]
-                        elif meth == "envelope":
-                            MFP_dict[f"{phase}"][3][k] += data_env[corr_idx]
+                        if args.geo_spreading and phase.endswith('kmps'):
+                            if meth == "basic":
+                                MFP_dict[f"{phase}"][2][k] += data[corr_idx] * A
+                            elif meth == "envelope":
+                                MFP_dict[f"{phase}"][3][k] += data_env[corr_idx] * A
+                            else:
+                                print(f"{meth} not implemented.")
+                                
                         else:
-                            print(f"{meth} not implemented.")
+                            if meth == "basic":
+                                MFP_dict[f"{phase}"][2][k] += data[corr_idx] 
+                            elif meth == "envelope":
+                                MFP_dict[f"{phase}"][3][k] += data_env[corr_idx] 
+                            else:
+                                print(f"{meth} not implemented.")
+                        
             
             
                         
@@ -299,7 +287,7 @@ def run_mfp(args,comm,size,rank):
         if args.stationary_phases:
             MFP_phases_dict_exp = dict()
 
-            for phases in args.phase_pair_list:
+            for phases in args.phase_list:
                 MFP_phases_dict_exp[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
 
             for subdict in MFP_phases_dict_all:

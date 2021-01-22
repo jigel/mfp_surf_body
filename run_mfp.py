@@ -198,7 +198,7 @@ if mfp_args.stationary_phases:
                 phase_pair_list.append(list_2)
             
     
-    mfp_args.phase_pair_list = phase_pair_list
+    mfp_args.phase_list = phase_pair_list
     # get the main phases to create synthetic data, i.e. the ones with only one letter
     mfp_args.main_phases = [i for i in mfp_args.phases if len(i) == 1]
 
@@ -222,7 +222,13 @@ if mfp_args.stationary_phases:
         
 
     comm.Barrier()
+
+# if it's not a stationary phase run, make phase list from normal phases
+else:
+    mfp_args.phase_list = mfp_args.phases
     
+    # To make sure it doesn't loop 
+    mfp_args.main_phases = [0]
     
 
     
@@ -231,60 +237,14 @@ if mfp_args.stationary_phases:
 ## Should create a map for each phase pair
 # iterate over the main phases
 
-if mfp_args.stationary_phases:
-    for phase in mfp_args.main_phases:
+    
+# for stationary phases loop over the main_phases
+for phase in mfp_args.main_phases:
 
+    if mfp_args.stationary_phases:
         mfp_args.correlation_path = os.path.join(mfp_args.project_path,f'corr_stat_phase_{phase}_{mfp_args.stat_phase_input.lower()}')
 
-        mfp = run_mfp(mfp_args,comm,size,rank)
-
-
-        # save the different mfp maps and plot
-        if rank == 0:
-            print("Saving and plotting output..")
-
-            if not os.path.isdir(os.path.join(mfp_args.project_path,"mfp_results")):
-                os.makedirs(os.path.join(mfp_args.project_path,"mfp_results"))
-
-            mfp_result_path = os.path.join(mfp_args.project_path,"mfp_results")
-
-            if not os.path.isdir(os.path.join(mfp_args.project_path,"mfp_plots")):
-                os.makedirs(os.path.join(mfp_args.project_path,"mfp_plots"))
-
-            mfp_plot_path = os.path.join(mfp_args.project_path,"mfp_plots")
-
-            for phases in mfp:
-
-                # save basic
-                np.save(os.path.join(mfp_result_path,f'MFP_{phases}_basic.npy'),mfp[phases][2])
-
-                # save envelope
-                np.save(os.path.join(mfp_result_path,f'MFP_{phases}_envelope.npy'),mfp[phases][3])
-
-                if mfp_args.plot:
-
-                    plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
-                              data=mfp[phases][2],
-                              output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_basic.png'),
-                              triangulate=True,
-                              cbar=True,
-                              only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                              title=f'MFP for phases {phases}. Method: basic.',
-                              stationlist_path=mfp_args.stationlist_path)
-
-
-                    plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
-                              data=mfp[phases][3],
-                              output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_envelope.png'),
-                              triangulate=True,
-                              cbar=True,
-                              only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                              title=f'MFP for phases {phases}. Method: envelope.',
-                              stationlist_path=mfp_args.stationlist_path)
-
-                    
-else:
-
+    # run matched field processing
     mfp = run_mfp(mfp_args,comm,size,rank)
 
 
@@ -329,8 +289,10 @@ else:
                           cbar=True,
                           only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
                           title=f'MFP for phases {phases}. Method: envelope.',
-                          stationlist_path=mfp_args.stationlist_path)    
-
+                          stationlist_path=mfp_args.stationlist_path)
+                
+                
+        
 
 
             
@@ -339,8 +301,8 @@ comm.Barrier()
 if rank == 0:
     print("===="*20)
     print(f"MFP done.")
-    print(f"Results in {mfp_result_path}.")
-    print(f"Plots in {mfp_plot_path}.")
+    print(f"Results in {mfp_result_path}")
+    print(f"Plots in {mfp_plot_path}")
     print("===="*20)
 
 comm.Barrier()
