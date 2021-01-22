@@ -1,0 +1,75 @@
+# give the project a name, for example herbert
+project_name: MFP_example_simple
+
+# In which folder do you want to save it?
+output_path: ./mfp_example/mfp_output
+
+# Where are the cross-correlations that should be used? Set to None if stationary phases are to be computed.
+correlation_path: ./mfp_example/correlation
+
+# What file format are they? List with, e.g., ["SAC","sac"]
+corr_format: ["SAC","sac"]
+
+# Which stations am I using?
+stationlist_path: ./mfp_example/stationlist.csv
+
+# Do you want to set a minimum and maximum inter-station distance? It's in degrees. Set to both to 0 or null if you want to use all cross-correlations.
+station_distance_min: 0
+station_distance_max: 0
+
+# Which grid shall be used to do the grid search? Either path to a .npy file with [[lat],[lon]] or set to svp_grid to create a spatially variable grid with parameters below
+sourcegrid_path: svp_grid
+
+# If svp_grid: need to set parameters below
+# If you want a (quasi) homogeneous grid just set svp_phi_min = svp_phi_max at the desired grid point distance
+svp_grid_config:
+    svp_dense_antipole: false # flips the grid at the equator before rotating it, i.e. both sides are the same
+    svp_only_ocean: false # If true removes all grid points on land 
+    svp_plot: false # plot the grid
+    # the following are parameters (lists) for the grid. Multiple parameters can be given to create a grid with multiple dense areas
+    svp_beta: # How fast should the grid go from phi_min to phi_max? Low value -> slow, high value -> fast. Standard roughly 5
+    - 5
+    svp_gamma: # If multiple grids are given: Radius of circle (in degrees) that is removed and replaced by the new grid. First value is ignored.
+    - 0
+    svp_lat_0: # Centre of the spatially variable grid (or grids if multiple are given)
+    - 47
+    svp_lon_0: # Centre of the spatially variable grid (or grids if multiple are given)
+    - 8
+    svp_phi_min: # Minimum grid point distance in degrees
+    - 4
+    svp_phi_max: # Maximum grid point distance in degrees
+    - 4
+    svp_sigma: # Radius of area (in degrees) of high grid point density
+    - 20
+
+# What method should I use for the MFP? Should be a list. Currently available are: ["basic","envelope"] where basic takes the value of the time series and envelope the value of the envelope
+method: ["basic","envelope"]
+
+# Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
+stationary_phases: False
+stat_phase_input: ricker
+stat_phase_npts: 5000
+stat_phase_dt: 1
+# set sigma here (in seconds if dt = 1). For Gauss is the variance, for Ricker the width parameter of the wavelet.
+stat_phase_sigma: 20
+# should it be on the causal, acausal, or both sides of the correlation?
+stat_phase_caus: both
+
+# What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
+bandpass_filter: null
+
+# taup model and list of phases (e.g. P, S) you want to look at
+# see https://docs.obspy.org/packages/obspy.taup.html for more details
+# Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
+taup_model: 'iasp91'
+phases: ['P','3kmps']
+
+# set the phase pairs you want to look at, particularly for stationary phases. If set to all, the above list will be used.
+# will be done in both directions, i.e. P-PP will also do PP-P
+phase_pairs: null
+
+# Should geometrical spreading be implement?
+# currently only works for phases where velocity is given, i.e. surface waves
+geo_spreading: True
+# Do you want to plot the output?
+plot: True
