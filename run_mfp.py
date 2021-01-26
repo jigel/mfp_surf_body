@@ -205,7 +205,7 @@ if mfp_args.stationary_phases:
     
     mfp_args.phase_list = phase_pair_list
     # get the main phases to create synthetic data, i.e. the ones with only one letter
-    mfp_args.main_phases = [i for i in mfp_args.phases if len(i) == 1]
+    mfp_args.main_phases = mfp_args.stat_phase_main
 
     if rank == 0:
         print(f"Creating synthetic correlations for stationary phase analysis: {mfp_args.main_phases}")
@@ -276,7 +276,12 @@ for phase in mfp_args.main_phases:
 
         mfp_plot_path = os.path.join(mfp_args.project_path,"mfp_plots")
 
-        for phases in mfp:
+        
+        # sum them up if that's wanted
+        if mfp_args.phase_pairs_sum:
+            mfp_sum = dict()
+        
+        for i,phases in enumerate(mfp):
 
             # save basic
             np.save(os.path.join(mfp_result_path,f'MFP_{phases}_basic.npy'),mfp[phases][2])
@@ -284,6 +289,15 @@ for phase in mfp_args.main_phases:
             # save envelope
             np.save(os.path.join(mfp_result_path,f'MFP_{phases}_envelope.npy'),mfp[phases][3])
 
+            if mfp_args.phase_pairs_sum and i == 0:
+                mfp_sum['grid'] = [mfp[phases][0],mfp[phases][1]]
+                mfp_sum['basic'] = mfp[phases][2]
+                mfp_sum['envelope'] = mfp[phases][3]
+            else:
+                mfp_sum['basic'] += mfp[phases][2]
+                mfp_sum['envelope'] += mfp[phases][3]  
+
+            
             if mfp_args.plot:
 
                 plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
@@ -305,7 +319,27 @@ for phase in mfp_args.main_phases:
                           title=f'MFP for phases {phases}. Method: envelope.',
                           stationlist_path=mfp_args.stationlist_path)
                 
-                
+        if mfp_args.phase_pairs_sum:
+            
+            plot_grid(grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
+                      data=mfp_sum['basic'],
+                      output_file=os.path.join(mfp_plot_path,f'MFP_sum_basic.png'),
+                      triangulate=True,
+                      cbar=True,
+                      only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
+                      title=f'MFP for phases {mfp_args.phase_list}. Method: basic.',
+                      stationlist_path=mfp_args.stationlist_path)
+
+
+            plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
+                      data=mfp_sum['envelope'],
+                      output_file=os.path.join(mfp_plot_path,f'MFP_sum_envelope.png'),
+                      triangulate=True,
+                      cbar=True,
+                      only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
+                      title=f'MFP for phases {mfp_args.phase_list}. Method: envelope.',
+                      stationlist_path=mfp_args.stationlist_path)
+        
     
             
 comm.Barrier()

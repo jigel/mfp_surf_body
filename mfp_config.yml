@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0122_mfp_stat_phase_30deg_P_PP_sigma_5
+project_name: 0126_mfp_stat_phase_P_PP_PPP_Pdiff_PKP
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -11,7 +11,7 @@ correlation_path: null
 corr_format: ["SAC","sac"]
 
 # Which stations am I using?
-stationlist_path: /Users/jigel/noisi/mfp_stationary_phases/mfp_example/stationlist.csv
+stationlist_path: /Users/jigel/noisi/mfp_stationary_phases/mfp_example/stationlist.csv 
 
 # Do you want to set a minimum and maximum inter-station distance? It's in degrees. Set to both to 0 or null if you want to use all cross-correlations.
 station_distance_min: 0
@@ -36,9 +36,9 @@ svp_grid_config:
     svp_lon_0: # Centre of the spatially variable grid (or grids if multiple are given)
     - 8
     svp_phi_min: # Minimum grid point distance in degrees
-    - 2
+    - 4
     svp_phi_max: # Maximum grid point distance in degrees
-    - 2
+    - 4
     svp_sigma: # Radius of area (in degrees) of high grid point density
     - 20
 
@@ -52,7 +52,7 @@ stat_phase_input: ricker
 stat_phase_npts: 5000
 stat_phase_dt: 1
 # set sigma here (in seconds if dt = 1). For Gauss is the variance, for Ricker the width parameter of the wavelet.
-stat_phase_sigma: 5
+stat_phase_sigma: 10
 # should it be on the causal, acausal, or both sides of the correlation?
 stat_phase_caus: both
 
@@ -61,13 +61,18 @@ bandpass_filter: null
 
 # taup model and list of phases (e.g. P, S) you want to look at
 # see https://docs.obspy.org/packages/obspy.taup.html for more details
+# Add phases for which stationary phase synthetic data should be created
+stat_phase_main: ['P']
 # Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
+# First phase in this list will be used to calculate stationary phase data, i.e. phase going from one station to another
 taup_model: 'iasp91'
-phases: ['P','PP']
-
+phases: ['P','PP','PPP','Pdiff','PKP']
 # set the phase pairs you want to look at, particularly for stationary phases. If set to all, the above list will be used.
 # will be done in both directions, i.e. P-PP will also do PP-P
-phase_pairs: ['P-PP']
+phase_pairs: ['P-PP','PPP-PKP','PP-PKP','PPP-Pdiff','PP-Pdiff']
+
+# Sum up the given phase pairs to one map?
+phase_pairs_sum: True
 
 # Should geometrical spreading be implement?
 # currently only works for phases where velocity is given, i.e. surface waves
