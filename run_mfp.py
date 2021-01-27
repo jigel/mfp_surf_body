@@ -301,25 +301,26 @@ for phase in mfp_args.main_phases:
     
 
             
-            if mfp_args.plot:
+                if mfp_args.plot:
 
-                plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
-                          data=mfp[phases][2],
-                          output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_{method}.png'),
-                          triangulate=True,
-                          cbar=True,
-                          only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                          title=f'MFP for phases {phases}. Method: {method}.',
-                          stationlist_path=mfp_args.stationlist_path)
+                    plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
+                              data=mfp[phases][meth_idx],
+                              output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_{method}.png'),
+                              triangulate=True,
+                              cbar=True,
+                              only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
+                              title=f'MFP for phases {phases}. Method: {method}.',
+                              stationlist_path=mfp_args.stationlist_path)
 
 
                 
         if mfp_args.phase_pairs_sum:
             
             for method in mfp_args.method:
+                np.save(os.path.join(mfp_result_path,f'MFP_sum_{method}.npy'),mfp_sum[method])
             
                 plot_grid(grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
-                          data=mfp_sum['basic'],
+                          data=mfp_sum[method],
                           output_file=os.path.join(mfp_plot_path,f'MFP_sum_{method}.png'),
                           triangulate=True,
                           cbar=True,
