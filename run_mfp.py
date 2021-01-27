@@ -174,7 +174,7 @@ if rank == 0:
     run_time.write(f"Project setup: {np.around((t_1-t_0)/60,4)} min \n")
     
     #### Check memory usage
-    print("Memory usage in Gb at start ", process.memory_info().rss / 1.e9)
+    #print("Memory usage in Gb at start ", process.memory_info().rss / 1.e9)
     run_time.write(f"Memory usage in Gb at start {process.memory_info().rss / 1.e9} \n")
 
     
@@ -187,7 +187,7 @@ if mfp_args.stationary_phases:
     phase_pair_list = []
     
     if mfp_args.phase_pairs == 'all':
-        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases]
+        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases if i != j]
     elif isinstance(mfp_args.phase_pairs,list):
         phase_pair_list = []
 
@@ -242,7 +242,7 @@ if rank == 0:
     run_time.write(f"Before MFP: {np.around((t_2-t_1)/60,4)} min \n")
 
     #### Check memory usage
-    print("Memory usage in Gb before MFP ", process.memory_info().rss / 1.e9)
+    #print("Memory usage in Gb before MFP ", process.memory_info().rss / 1.e9)
     run_time.write(f"Memory usage in Gb before MFP {process.memory_info().rss / 1.e9} \n")
 
     
@@ -282,66 +282,53 @@ for phase in mfp_args.main_phases:
             mfp_sum = dict()
         
         for i,phases in enumerate(mfp):
+            
+            for method in mfp_args.method:
+                
+                if method == 'basic':
+                    meth_idx = 2
+                if method == 'envelope':
+                    meth_idx = 3
+                # save 
+                np.save(os.path.join(mfp_result_path,f'MFP_{phases}_{method}.npy'),mfp[phases][meth_idx])
 
-            # save basic
-            np.save(os.path.join(mfp_result_path,f'MFP_{phases}_basic.npy'),mfp[phases][2])
 
-            # save envelope
-            np.save(os.path.join(mfp_result_path,f'MFP_{phases}_envelope.npy'),mfp[phases][3])
-
-            if mfp_args.phase_pairs_sum and i == 0:
-                mfp_sum['grid'] = [mfp[phases][0],mfp[phases][1]]
-                mfp_sum['basic'] = mfp[phases][2]
-                mfp_sum['envelope'] = mfp[phases][3]
-            else:
-                mfp_sum['basic'] += mfp[phases][2]
-                mfp_sum['envelope'] += mfp[phases][3]  
+                if mfp_args.phase_pairs_sum and i == 0:
+                    mfp_sum['grid'] = [mfp[phases][0],mfp[phases][1]]
+                    mfp_sum[method] = mfp[phases][meth_idx]
+                else:
+                    mfp_sum[method] += mfp[phases][meth_idx]
+    
 
             
             if mfp_args.plot:
 
                 plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
                           data=mfp[phases][2],
-                          output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_basic.png'),
+                          output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_{method}.png'),
                           triangulate=True,
                           cbar=True,
                           only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                          title=f'MFP for phases {phases}. Method: basic.',
+                          title=f'MFP for phases {phases}. Method: {method}.',
                           stationlist_path=mfp_args.stationlist_path)
 
 
-                plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
-                          data=mfp[phases][3],
-                          output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_envelope.png'),
-                          triangulate=True,
-                          cbar=True,
-                          only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                          title=f'MFP for phases {phases}. Method: envelope.',
-                          stationlist_path=mfp_args.stationlist_path)
                 
         if mfp_args.phase_pairs_sum:
             
-            plot_grid(grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
-                      data=mfp_sum['basic'],
-                      output_file=os.path.join(mfp_plot_path,f'MFP_sum_basic.png'),
-                      triangulate=True,
-                      cbar=True,
-                      only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                      title=f'MFP for phases {mfp_args.phase_list}. Method: basic.',
-                      stationlist_path=mfp_args.stationlist_path)
-
-
-            plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
-                      data=mfp_sum['envelope'],
-                      output_file=os.path.join(mfp_plot_path,f'MFP_sum_envelope.png'),
-                      triangulate=True,
-                      cbar=True,
-                      only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                      title=f'MFP for phases {mfp_args.phase_list}. Method: envelope.',
-                      stationlist_path=mfp_args.stationlist_path)
-        
-    
+            for method in mfp_args.method:
             
+                plot_grid(grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
+                          data=mfp_sum['basic'],
+                          output_file=os.path.join(mfp_plot_path,f'MFP_sum_{method}.png'),
+                          triangulate=True,
+                          cbar=True,
+                          only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
+                          title=f'MFP for phases {mfp_args.phase_list}. Method: {method}.',
+                          stationlist_path=mfp_args.stationlist_path)
+
+
+
 comm.Barrier()
 
 
@@ -351,7 +338,7 @@ if rank == 0:
     run_time.write(f"Total runtime: {np.around((t_3-t_0)/60,4)} min \n")
 
     #### Check memory usage
-    print("Memory usage in Gb after MFP ", process.memory_info().rss / 1.e9)
+    #print("Memory usage in Gb after MFP ", process.memory_info().rss / 1.e9)
     run_time.write(f"Memory usage in Gb after MFP {process.memory_info().rss / 1.e9} \n")
     run_time.close()
     
