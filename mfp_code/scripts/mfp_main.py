@@ -13,10 +13,6 @@ import sys
 import functools
 print = functools.partial(print, flush=True)
 
-import psutil
-process = psutil.Process(os.getpid())
-
-
 def mfp(args,comm,size,rank):
     """
     Matched Field Processing
