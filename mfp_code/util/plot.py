@@ -9,8 +9,8 @@ from matplotlib import colors
 import cmasher as cmr
 from pandas import read_csv
 
-cmap = cmr.cosmic    # CMasher
-cmap = plt.get_cmap('cmr.cosmic')   # MPL
+#cmap = cmr.seismic    # CMasher
+cmap = plt.get_cmap('seismic')   # MPL
 
 
 
@@ -28,6 +28,9 @@ def plot_grid(grid,data=None,output_file=None,triangulate=False,cbar=False,only_
     
     if data is None:
         triangulate = False
+    else:
+        vmax = np.max(data)
+        vmin = -np.max(data)
     
     plt.figure(figsize=(50,20))
     ax  = plt.axes(projection=ccrs.Robinson())
@@ -40,12 +43,12 @@ def plot_grid(grid,data=None,output_file=None,triangulate=False,cbar=False,only_
         
     if triangulate:
         grid_tri = tri.Triangulation(grid[1],grid[0])
-        plt.tripcolor(grid_tri,data,cmap=cmap,linewidth=0.0,edgecolor='none',zorder=1,transform=ccrs.PlateCarree())
+        plt.tripcolor(grid_tri,data,cmap=cmap,vmin=vmin,vmax=vmax,linewidth=0.0,edgecolor='none',zorder=1,transform=ccrs.PlateCarree())
 
     else:
         # plot either data or grid
         if data is not None:
-            plt.scatter(grid[1],grid[0],c=data,s=20,marker='o',cmap=cmap,zorder=1,transform=ccrs.PlateCarree())
+            plt.scatter(grid[1],grid[0],c=data,s=20,marker='o',cmap=cmap,vmin=vmin,vmax=vmax,zorder=1,transform=ccrs.PlateCarree())
         else:
             plt.scatter(grid[1],grid[0],c='k',s=20,marker='o',cmap=cmap,zorder=1,transform=ccrs.PlateCarree())
 
