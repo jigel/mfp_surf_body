@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0128_mfp_3kmps_P_lise_3_TEST_4
+project_name: 0128_mfp_3kmps_lise_3_stat_phase
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -9,6 +9,9 @@ correlation_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/cor
 
 # What file format are they? List with, e.g., ["SAC","sac"]
 corr_format: ["SAC","sac"]
+
+# What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
+bandpass_filter: [0.1,0.2,5]
 
 # Which stations am I using?
 stationlist_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/stationlist_all.csv 
@@ -55,21 +58,18 @@ stat_phase_dt: 1
 stat_phase_sigma: 10
 # should it be on the causal, acausal, or both sides of the correlation?
 stat_phase_caus: both
-# Add phases for which stationary phase synthetic data should be created
-stat_phase_main: ['P','S']
-
-# What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
-bandpass_filter: null
+# Add phases for which stationary phase synthetic data should be created, i.e. at these arrivals the given wavelet will be added
+stat_phase_main: ['P']
 
 # taup model and list of phases (e.g. P, S) you want to look at
 # see https://docs.obspy.org/packages/obspy.taup.html for more details
 # Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
 taup_model: 'iasp91'
-phases: ['P','S']
+phases: ['3kmps']
 # set the phase pairs you want to look at for stationary phases. If set to all, the above list will be used. If set to same, only same pairs will be done, i.e. P-P, PP-PP, 3kmps-3kmps etc.
 # will be done in both directions, i.e. P-PP will also do PP-P
-phase_pairs: ['P-S']
-# Do you want 'auto'-phases like P-P when phase_pairs is set to all? This is automatically True if stationary phases is False
+phase_pairs: same
+# Do you want 'auto'-phases like P-P when phase_pairs is set to all? This is automatically True if stationary phases is False or phase_pairs is same
 phase_pairs_auto: False
 
 # Sum up the given phase pairs to one map?

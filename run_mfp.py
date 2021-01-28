@@ -75,10 +75,13 @@ with open(sys.argv[1]) as f:
 for attr in mfp_config:
     setattr(mfp_args,attr,mfp_config[attr])
     
-    
+        
 # perform some checks before starting
 if not mfp_args.stationary_phases and mfp_args.correlation_path is None:
     raise Exception('Need to set correlation path if stationary_phases is False.')
+    
+if mfp_args.stationary_phases and not isinstance(mfp_args.phase_pairs,list) and len(mfp_args.phases) == 1 and not mfp_args.phase_pairs_auto and mfp_args.phase_pairs != 'same':
+    raise Exception('For stationary phases set either multiple phases or give more than one phase in phase_pairs')
     
 mfp_args.output_path = os.path.abspath(mfp_args.output_path)
 mfp_args.stationlist_path = os.path.abspath(mfp_args.stationlist_path)
@@ -286,7 +289,7 @@ if rank == 0:
 # for stationary phases loop over the main_phases
 for phase in mfp_args.main_phases:
 
-    if rank == 0:
+    if rank == 0 and mfp_args.stationary_phases:
         print(f"Working on phase {phase} arrivals..")
     
     if mfp_args.stationary_phases:

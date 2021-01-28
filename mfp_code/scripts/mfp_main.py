@@ -117,7 +117,7 @@ def mfp_main(args,comm,size,rank):
         dist_var = kilometers2degrees(stat_pair[stat_pair_name][0]/1000) # change distance from metres to degrees
 
         if args.station_distance_max > dist_var > args.station_distance_min:            
-            if args.bandpass_filter is not None:
+            if args.bandpass_filter is not None and not args.stationary_phases:
                 tr_corr = obspy.read(corr)[0].filter('bandpass',freqmin=args.bandpass_filter[0],freqmax=args.bandpass_filter[1],corners=args.bandpass_filter[2],zerophase=True)
             else:
                 tr_corr = obspy.read(corr)[0]
@@ -203,9 +203,9 @@ def mfp_main(args,comm,size,rank):
                 
                 # geometric spreading for surface waves
                             
-                if args.geo_spreading and phase.endswith('kmps'):
+                if args.geo_spreading and phase_1.endswith('kmps') and phase_2.endswith('kmps'):
                     
-                    g_speed = float(phase.split('kmps')[0])*1000
+                    g_speed = float(phase_1.split('kmps')[0])*1000
                     # geometric spreading term
                     geo_dist_var = np.abs(dist_2_m + dist_1_m)/(2*1000) # average distance same units as speed
                     
@@ -223,11 +223,11 @@ def mfp_main(args,comm,size,rank):
                     # basic is dictionary index 2
                     # envelope is dictionary index 3
 
-                    if args.geo_spreading and phase.endswith('kmps'):
+                    if args.geo_spreading and phase_1.endswith('kmps') and phase_2.endswith('kmps'):
                         if meth == "basic":
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data[corr_idx] * A
                         elif meth == "envelope":
-                            MMFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx] * A
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx] * A
                         else:
                             print(f"{meth} not implemented.")
 
