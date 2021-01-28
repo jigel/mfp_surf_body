@@ -17,7 +17,7 @@ print = functools.partial(print, flush=True)
 from mfp_code.scripts.create_sourcegrid import create_sourcegrid
 from mfp_code.util.plot import plot_grid
 from mfp_code.scripts.create_stat_phase_synthetics import create_synth
-from mfp_code.scripts.mfp_main import mfp
+from mfp_code.scripts.mfp_main import mfp_main
 
 # plotting
 import matplotlib.pyplot as plt
@@ -187,7 +187,14 @@ if mfp_args.stationary_phases:
     phase_pair_list = []
     
     if mfp_args.phase_pairs == 'all':
-        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases if i != j]
+        if mfp_args.phase_pairs_auto:
+            phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases]
+        else:
+            phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases if i != j]
+
+    elif mfp_args.phase_pairs == 'same':
+        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases if i == j]
+        
     elif isinstance(mfp_args.phase_pairs,list):
         phase_pair_list = []
 
@@ -197,6 +204,7 @@ if mfp_args.stationary_phases:
 
             phase_pair_list.append(list_1)
             
+            # ignore when it's the same, e.g. P-P or PKP-PKP
             if list_1 == list_2:
                 continue
             else:
@@ -209,7 +217,6 @@ if mfp_args.stationary_phases:
 
     if rank == 0:
         print(f"Creating synthetic correlations for stationary phase analysis: {mfp_args.main_phases}")
-        print(f"Phase pairs: {phase_pair_list}")
         
         # create folder for these correlations
         for phase in mfp_args.main_phases:
@@ -223,7 +230,7 @@ if mfp_args.stationary_phases:
     create_synth(mfp_args,comm,size,rank)
 
     if rank == 0:
-        print("All synthetic correlations created")
+        print("All synthetic correlations created.")
         
 
     comm.Barrier()
@@ -231,13 +238,37 @@ if mfp_args.stationary_phases:
 # if it's not a stationary phase run, make phase list from normal phases
 else:
     mfp_args.correlation_path = os.path.abspath(mfp_args.correlation_path)
-    mfp_args.phase_list = mfp_args.phases
+
+    # check which phases are wanted
+    phase_pair_list = []
+    
+    if mfp_args.phase_pairs == 'all':
+        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases]
+        
+    elif mfp_args.phase_pairs == 'same':
+        phase_pair_list = [[i,j] for i in mfp_args.phases for j in mfp_args.phases if i == j]
+        
+    elif isinstance(mfp_args.phase_pairs,list):
+        phase_pair_list = []
+
+        for pair in mfp_args.phase_pairs:
+            list_1 = [i for i in pair.split('-')] # one way
+            list_2 = [i for i in pair.split('-')[::-1]] # and the other way too
+
+            phase_pair_list.append(list_1)
+            # when it's the same it's just simple MFP
+            phase_pair_list.append(list_2)
+    
     
     # To make sure it doesn't loop 
     mfp_args.main_phases = [0]
-    
+    mfp_args.phase_list = phase_pair_list
+            
 
+        
 if rank == 0:
+    print(f"Phase pairs: {phase_pair_list}")
+    
     t_2 = time.time()
     run_time.write(f"Before MFP: {np.around((t_2-t_1)/60,4)} min \n")
 
@@ -255,11 +286,14 @@ if rank == 0:
 # for stationary phases loop over the main_phases
 for phase in mfp_args.main_phases:
 
+    if rank == 0:
+        print(f"Working on phase {phase} arrivals..")
+    
     if mfp_args.stationary_phases:
         mfp_args.correlation_path = os.path.join(mfp_args.project_path,f'corr_stat_phase_{phase}_{mfp_args.stat_phase_input.lower()}')
 
     # run matched field processing
-    mfp = mfp(mfp_args,comm,size,rank)
+    mfp = mfp_main(mfp_args,comm,size,rank)
 
 
     # save the different mfp maps and plot
@@ -290,7 +324,7 @@ for phase in mfp_args.main_phases:
                 if method == 'envelope':
                     meth_idx = 3
                 # save 
-                np.save(os.path.join(mfp_result_path,f'MFP_{phases}_{method}.npy'),mfp[phases][meth_idx])
+                np.save(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}.npy'),mfp[phases][meth_idx])
 
 
                 if mfp_args.phase_pairs_sum and i == 0:
@@ -305,11 +339,11 @@ for phase in mfp_args.main_phases:
 
                     plot_grid(mfp_args,grid=[mfp[phases][0],mfp[phases][1]],
                               data=mfp[phases][meth_idx],
-                              output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_{method}.png'),
+                              output_file=os.path.join(mfp_plot_path,f'MFP_{phase}_{phases}_{method}.png'),
                               triangulate=True,
                               cbar=True,
                               only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                              title=f'MFP for phases {phases}. Method: {method}.',
+                              title=f'MFP for phases {phases} using {phase} arrival. Method: {method}.',
                               stationlist_path=mfp_args.stationlist_path)
 
 
@@ -317,15 +351,15 @@ for phase in mfp_args.main_phases:
         if mfp_args.phase_pairs_sum:
             
             for method in mfp_args.method:
-                np.save(os.path.join(mfp_result_path,f'MFP_sum_{method}.npy'),mfp_sum[method])
+                np.save(os.path.join(mfp_result_path,f'MFP_sum_{phase}_{method}.npy'),mfp_sum[method])
             
                 plot_grid(mfp_args,grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
                           data=mfp_sum[method],
-                          output_file=os.path.join(mfp_plot_path,f'MFP_sum_{method}.png'),
+                          output_file=os.path.join(mfp_plot_path,f'MFP_sum_{phase}_{method}.png'),
                           triangulate=True,
                           cbar=True,
                           only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                          title=f'MFP for all phases. Method: {method}.',
+                          title=f'MFP for all phases using {phase} arrival. Method: {method}.',
                           stationlist_path=mfp_args.stationlist_path)
 
 

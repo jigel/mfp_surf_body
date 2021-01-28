@@ -1,5 +1,5 @@
 # give the project a name, for example herbert
-project_name: 0128_mfp_stat_phase_P_PP_corr_test
+project_name: 0128_mfp_3kmps_P_lise_3_TEST_4
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
@@ -43,7 +43,7 @@ svp_grid_config:
     - 20
 
 # What method should I use for the MFP? Should be a list. Currently available are: ["basic","envelope"] where basic takes the value of the time series and envelope the value of the envelope
-method: ["basic"]
+method: ["basic","envelope"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
 stationary_phases: True
@@ -55,20 +55,22 @@ stat_phase_dt: 1
 stat_phase_sigma: 10
 # should it be on the causal, acausal, or both sides of the correlation?
 stat_phase_caus: both
+# Add phases for which stationary phase synthetic data should be created
+stat_phase_main: ['P','S']
 
 # What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
 bandpass_filter: null
 
 # taup model and list of phases (e.g. P, S) you want to look at
 # see https://docs.obspy.org/packages/obspy.taup.html for more details
-# Add phases for which stationary phase synthetic data should be created
-stat_phase_main: ['P']
 # Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
 taup_model: 'iasp91'
-phases: ['P','PP']
-# set the phase pairs you want to look at, particularly for stationary phases. If set to all, the above list will be used.
+phases: ['P','S']
+# set the phase pairs you want to look at for stationary phases. If set to all, the above list will be used. If set to same, only same pairs will be done, i.e. P-P, PP-PP, 3kmps-3kmps etc.
 # will be done in both directions, i.e. P-PP will also do PP-P
-phase_pairs: all
+phase_pairs: ['P-S']
+# Do you want 'auto'-phases like P-P when phase_pairs is set to all? This is automatically True if stationary phases is False
+phase_pairs_auto: False
 
 # Sum up the given phase pairs to one map?
 phase_pairs_sum: True
