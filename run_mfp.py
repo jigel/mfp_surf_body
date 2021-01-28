@@ -123,7 +123,7 @@ if rank == 0:
         
         sourcegrid = np.load(mfp_args.sourcegrid_path)
         
-        plot_grid(grid=sourcegrid,
+        plot_grid(mfp_args,grid=sourcegrid,
                   output_file=os.path.join(mfp_args.project_path,'sourcegrid.png'),
                   only_ocean=False,
                   title=f'Sourcegrid with {np.size(sourcegrid[0])} gridpoints',
@@ -143,7 +143,7 @@ if rank == 0:
         mfp_args.sourcegrid_path = os.path.join(mfp_args.project_path,'sourcegrid.npy')
         
         # plot sourcegrid
-        plot_grid(grid=sourcegrid,
+        plot_grid(mfp_args,grid=sourcegrid,
                   data=None,
                   output_file=os.path.join(mfp_args.project_path,'sourcegrid.png'),
                   only_ocean=False,title=f'Sourcegrid with {np.size(sourcegrid[0])} gridpoints',
@@ -303,7 +303,7 @@ for phase in mfp_args.main_phases:
             
                 if mfp_args.plot:
 
-                    plot_grid(grid=[mfp[phases][0],mfp[phases][1]],
+                    plot_grid(mfp_args,grid=[mfp[phases][0],mfp[phases][1]],
                               data=mfp[phases][meth_idx],
                               output_file=os.path.join(mfp_plot_path,f'MFP_{phases}_{method}.png'),
                               triangulate=True,
@@ -319,13 +319,13 @@ for phase in mfp_args.main_phases:
             for method in mfp_args.method:
                 np.save(os.path.join(mfp_result_path,f'MFP_sum_{method}.npy'),mfp_sum[method])
             
-                plot_grid(grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
+                plot_grid(mfp_args,grid=[mfp_sum['grid'][0],mfp_sum['grid'][1]],
                           data=mfp_sum[method],
                           output_file=os.path.join(mfp_plot_path,f'MFP_sum_{method}.png'),
                           triangulate=True,
                           cbar=True,
                           only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
-                          title=f'MFP for phases {mfp_args.phase_list}. Method: {method}.',
+                          title=f'MFP for all phases. Method: {method}.',
                           stationlist_path=mfp_args.stationlist_path)
 
 

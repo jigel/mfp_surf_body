@@ -1,17 +1,17 @@
 # give the project a name, for example herbert
-project_name: 0126_mfp_stat_phase_P_PP_PPP_Pdiff_PKP
+project_name: 0128_mfp_stat_phase_P_PP_corr_test
 
 # In which folder do you want to save it?
 output_path: ./mfp_output
 
-# Where are the cross-correlations that should be used? Set to None if stationary phases are to be computed.
-correlation_path: null
+# Where are the cross-correlations that should be used? If path is given and stationary phase is True, only correlations in this folder will be used
+correlation_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/corr_3
 
 # What file format are they? List with, e.g., ["SAC","sac"]
 corr_format: ["SAC","sac"]
 
 # Which stations am I using?
-stationlist_path: /Users/jigel/noisi/mfp_stationary_phases/mfp_example/stationlist.csv 
+stationlist_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/stationlist_all.csv 
 
 # Do you want to set a minimum and maximum inter-station distance? It's in degrees. Set to both to 0 or null if you want to use all cross-correlations.
 station_distance_min: 0
@@ -43,7 +43,7 @@ svp_grid_config:
     - 20
 
 # What method should I use for the MFP? Should be a list. Currently available are: ["basic","envelope"] where basic takes the value of the time series and envelope the value of the envelope
-method: ["basic","envelope"]
+method: ["basic"]
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
 stationary_phases: True
@@ -64,12 +64,11 @@ bandpass_filter: null
 # Add phases for which stationary phase synthetic data should be created
 stat_phase_main: ['P']
 # Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
-# First phase in this list will be used to calculate stationary phase data, i.e. phase going from one station to another
 taup_model: 'iasp91'
-phases: ['P','PP','PPP','Pdiff','PKP']
+phases: ['P','PP']
 # set the phase pairs you want to look at, particularly for stationary phases. If set to all, the above list will be used.
 # will be done in both directions, i.e. P-PP will also do PP-P
-phase_pairs: ['P-PP','PPP-PKP','PP-PKP','PPP-Pdiff','PP-Pdiff']
+phase_pairs: all
 
 # Sum up the given phase pairs to one map?
 phase_pairs_sum: True

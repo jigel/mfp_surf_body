@@ -47,9 +47,26 @@ def create_synth(args,comm,size,rank):
             stat_pair.update({f"{net_1}.{sta_1}--{net_2}.{sta_2}":[dist_var,az_var,baz_var]})
     
     
-    # split list of stat_pairs up for different ranks
-    stat_pair_list = list(stat_pair.keys())
+    # if correlation path is given, only use those
+    if args.correlation_path is not None:
+        args.correlation_path = os.path.abspath(args.correlation_path)    
     
+        corr_files = [file for file in os.listdir(args.correlation_path) if file.split(".")[-1] in args.corr_format]
+        
+        stat_pair_list = []
+        
+        for corr in corr_files:
+            net_1 = corr.split('--')[0].split('.')[0]
+            sta_1 = corr.split('--')[0].split('.')[1]
+            net_2 = corr.split('--')[1].split('.')[0]
+            sta_2 = corr.split('--')[1].split('.')[1]
+            
+            stat_pair_list.append(f"{net_1}.{sta_1}--{net_2}.{sta_2}")
+    
+    else:
+        stat_pair_list = list(stat_pair.keys())
+    
+    # split list of stat_pairs up for different ranks
     if rank == 0:
         stat_pair_split = np.array_split(stat_pair_list,size)
         stat_pair_split = [k.tolist() for k in stat_pair_split]
