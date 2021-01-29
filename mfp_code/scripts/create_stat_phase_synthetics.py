@@ -32,13 +32,14 @@ def create_synth(args,comm,size,rank):
     
             net_2,sta_2,lat_2,lon_2 = j[1]['net'],j[1]['sta'],j[1]['lat'],j[1]['lon']
             
-            # ignore autocorr
-            if net_1 == net_2 and sta_1 == sta_2:
-                continue
-            
-            # don't do it in both directions
-            if f"{net_1}.{sta_1}--{net_2}.{sta_2}" in list(stat_pair.keys()) or f"{net_2}.{sta_2}--{net_1}.{sta_1}" in list(stat_pair.keys()):
-                continue
+            if args.correlation_path is None:
+                # ignore autocorr
+                if net_1 == net_2 and sta_1 == sta_2:
+                    continue
+                
+                # don't do it in both directions
+                if f"{net_1}.{sta_1}--{net_2}.{sta_2}" in list(stat_pair.keys()) or f"{net_2}.{sta_2}--{net_1}.{sta_1}" in list(stat_pair.keys()):
+                    continue
 
             dist_var,az_var, baz_var = gps2dist_azimuth(lat_1,lon_1,lat_2,lon_2)
             #dist_deg_var = kilometers2degrees(dist_var)
