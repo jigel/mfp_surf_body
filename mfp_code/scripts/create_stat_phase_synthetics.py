@@ -80,7 +80,7 @@ def create_synth(args,comm,size,rank):
     for k,i in enumerate(stat_pair_split):
         
         if k%100 == 0 and rank == 0:
-            print(f"At {k} of {np.size(stat_pair_split)} stations pairs on rank {rank}")
+            print(f"At {k} of {np.size(stat_pair_split)} station pairs on rank {rank}")
         
         stat_1 = i.split('--')[0]
         stat_2 = i.split('--')[1]
