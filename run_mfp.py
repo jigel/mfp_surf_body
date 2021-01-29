@@ -205,10 +205,16 @@ if mfp_args.stationary_phases:
             list_1 = [i for i in pair.split('-')] # one way
             list_2 = [i for i in pair.split('-')[::-1]] # and the other way too
 
-            phase_pair_list.append(list_1)
-            
+            if list_1 in phase_pair_list:
+                continue
+            else:
+                phase_pair_list.append(list_1)
+                
             # ignore when it's the same, e.g. P-P or PKP-PKP
             if list_1 == list_2:
+                continue
+                
+            if list_2 in phase_pair_list:
                 continue
             else:
                 phase_pair_list.append(list_2)
@@ -258,13 +264,18 @@ else:
             list_1 = [i for i in pair.split('-')] # one way
             list_2 = [i for i in pair.split('-')[::-1]] # and the other way too
 
-            phase_pair_list.append(list_1)
-            # when it's the same it's just simple MFP
-            phase_pair_list.append(list_2)
-    
-    
+            if list_1 in phase_pair_list:
+                continue
+            else:
+                phase_pair_list.append(list_1)
+                
+            if list_2 in phase_pair_list:
+                continue
+            else:
+                phase_pair_list.append(list_2)
+            
     # To make sure it doesn't loop 
-    mfp_args.main_phases = [0]
+    mfp_args.main_phases = ['corr']
     mfp_args.phase_list = phase_pair_list
             
 
