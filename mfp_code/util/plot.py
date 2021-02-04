@@ -61,6 +61,8 @@ def plot_grid(args,grid,data=None,output_file=None,triangulate=False,cbar=False,
     plt.figure(figsize=(50,20))
     ax  = plt.axes(projection=ccrs.Robinson())
     
+    ax.set_global()
+    
     if only_ocean:
         ax.add_feature(cfeature.NaturalEarthFeature('cultural', 'admin_0_countries', '50m', edgecolor='black', facecolor=cfeature.COLORS['land']),zorder=2)
     else:

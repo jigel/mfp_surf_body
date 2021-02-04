@@ -92,11 +92,11 @@ def mfp_main(args,comm,size,rank):
     
     
     # initiate dictionary for MFP phase maps
-    # content is grid[0],grid[1],basic,envelope
+    # content is grid[0],grid[1],basic,envelope,envelope_snr
     MFP_phases_dict = dict()
 
     for phases in args.phase_list:
-        MFP_phases_dict[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+        MFP_phases_dict[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
 
     
     for i,corr in enumerate(corr_files_split):
@@ -118,9 +118,11 @@ def mfp_main(args,comm,size,rank):
 
         if args.station_distance_max > dist_var > args.station_distance_min:            
             if args.bandpass_filter is not None and not args.stationary_phases:
-                tr_corr = obspy.read(corr)[0].filter('bandpass',freqmin=args.bandpass_filter[0],freqmax=args.bandpass_filter[1],corners=args.bandpass_filter[2],zerophase=True)
+                tr_corr = obspy.read(corr).filter('bandpass',freqmin=args.bandpass_filter[0],freqmax=args.bandpass_filter[1],corners=args.bandpass_filter[2],zerophase=True)[0]
             else:
                 tr_corr = obspy.read(corr)[0]
+        else:
+        	continue
     
     
         ## NEED TO MAYBE IMPLEMENT NORMALISATION HERE
@@ -228,6 +230,11 @@ def mfp_main(args,comm,size,rank):
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data[corr_idx] * A
                         elif meth == "envelope":
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx] * A
+                        elif meth == "envelope_snr":
+                            # shift the envelope
+                            data_env_shift = data_env - np.std(data_env)*args.envelope_snr
+                            data_env_shift[data_env_shift<0] = 0                                                                                 
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][4][k] += data_env_shift[corr_idx] * A 
                         else:
                             print(f"{meth} not implemented.")
 
@@ -236,6 +243,11 @@ def mfp_main(args,comm,size,rank):
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][2][k] += data[corr_idx] 
                         elif meth == "envelope":
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][3][k] += data_env[corr_idx] 
+                        elif meth == "envelope_snr":
+                            # shift the envelope
+                            data_env_shift = data_env - np.std(data_env)*args.envelope_snr
+                            data_env_shift[data_env_shift<0] = 0                                                                                 
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][4][k] += data_env_shift[corr_idx]
                         else:
                             print(f"{meth} not implemented.")
                         
@@ -256,13 +268,14 @@ def mfp_main(args,comm,size,rank):
         MFP_phases_dict_exp = dict()
 
         for phases in args.phase_list:
-            MFP_phases_dict_exp[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
+            MFP_phases_dict_exp[f'{phases[0]}-{phases[1]}'] = np.asarray([sourcegrid[0],sourcegrid[1],np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0])),np.zeros(np.shape(sourcegrid[0]))])
 
         for subdict in MFP_phases_dict_all:
             for phases in subdict:
                 # add the MFP maps from the different ranks
                 MFP_phases_dict_exp[phases][2] += subdict[phases][2]
                 MFP_phases_dict_exp[phases][3] += subdict[phases][3]
+                MFP_phases_dict_exp[phases][4] += subdict[phases][4]
 
     else:
         MFP_phases_dict_exp = dict()

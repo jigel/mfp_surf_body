@@ -337,6 +337,9 @@ for phase in mfp_args.main_phases:
                     meth_idx = 2
                 if method == 'envelope':
                     meth_idx = 3
+                if method == 'envelope_snr':
+                    meth_idx = 4
+                    
                 # save 
                 np.save(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}.npy'),mfp[phases][meth_idx])
 
