@@ -89,8 +89,8 @@ def create_synth(args,comm,size,rank):
         # create a trace
         tr_var = obspy.Trace()
         
-        tr_var.data = np.zeros(args.stat_phase_npts)
-        tr_var.stats.sampling_rate = 1/args.stat_phase_dt
+        tr_var.data = np.zeros(args.stat_phase_length*args.stat_phase_dt)
+        tr_var.stats.sampling_rate = args.stat_phase_dt
         
         # add metadata
         tr_var.stats.network = stat_1.split('.')[0]
@@ -106,7 +106,7 @@ def create_synth(args,comm,size,rank):
         tr_var.stats.sac.dist = stat_pair[i][0]
         tr_var.stats.sac.az = stat_pair[i][1]
         tr_var.stats.sac.baz = stat_pair[i][2]
-        tr_var.stats.sac.npts = args.stat_phase_npts
+        tr_var.stats.sac.npts = np.size(tr_var.data)
         tr_var.stats.sac.kstnm = stat_1.split('.')[1]
         tr_var.stats.sac.kevnm = stat_2.split('.')[1]
         tr_var.stats.sac.kuser0 = stat_2.split('.')[0]
@@ -147,7 +147,7 @@ def create_synth(args,comm,size,rank):
                     arr_time = [arr_1,-arr_1]
 
                 for arr in arr_time:
-                    spec = np.exp(-((time - arr) ** 2) /  (2 * args.stat_phase_sigma ** 2))
+                    spec = np.exp(-((time - arr) ** 2) /  (2 * args.stat_phase_dt*args.stat_phase_sigma ** 2))
                     tr_var.data += spec
                     
                     
@@ -170,7 +170,7 @@ def create_synth(args,comm,size,rank):
 
                 for arr in arr_time:
                     # create ricker and roll to correct lag
-                    spec = np.roll(ricker(np.size(tr_var.data),args.stat_phase_sigma),int(arr*args.stat_phase_dt))
+                    spec = np.roll(ricker(np.size(tr_var.data),args.stat_phase_dt*args.stat_phase_sigma),int(arr*args.stat_phase_dt))
                     tr_var.data += spec
                 
                 
