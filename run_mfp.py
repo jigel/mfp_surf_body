@@ -331,32 +331,35 @@ for phase in mfp_args.main_phases:
         
         for i,phases in enumerate(mfp):
             
-            for method in mfp_args.method:
-                
-                if method == 'basic':
-                    meth_idx = 2
-                if method == 'envelope':
-                    meth_idx = 3
-                if method == 'envelope_snr':
-                    meth_idx = 4
-                    
+            for m_idx,method in enumerate(mfp_args.method):
+                meth_idx = m_idx+2            
+     
                 # save 
-                np.save(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}.npy'),mfp[phases][meth_idx])
+                if not os.path.isfile(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}.npy')):
+                    np.save(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}.npy'),mfp[phases][meth_idx])
+                else:
+                    np.save(os.path.join(mfp_result_path,f'MFP_{phase}_{phases}_{method}_{i}.npy'),mfp[phases][meth_idx])
 
 
                 if mfp_args.phase_pairs_sum and i == 0:
                     mfp_sum['grid'] = [mfp[phases][0],mfp[phases][1]]
                     mfp_sum[method] = mfp[phases][meth_idx]
-                else:
+                elif mfp_args.phase_pairs_sum:
                     mfp_sum[method] += mfp[phases][meth_idx]
     
 
             
                 if mfp_args.plot:
+                    
+                    if not os.path.isfile(os.path.join(mfp_plot_path,f'MFP_{phase}_{phases}_{method}.png')):
+                        output_file = os.path.join(mfp_plot_path,f'MFP_{phase}_{phases}_{method}.png')
+                    else:
+                        output_file = os.path.join(mfp_plot_path,f'MFP_{phase}_{phases}_{method}_{i}.png')
 
+                
                     plot_grid(mfp_args,grid=[mfp[phases][0],mfp[phases][1]],
                               data=mfp[phases][meth_idx],
-                              output_file=os.path.join(mfp_plot_path,f'MFP_{phase}_{phases}_{method}.png'),
+                              output_file=output_file,
                               triangulate=True,
                               cbar=True,
                               only_ocean=mfp_args.svp_grid_config['svp_only_ocean'],
