@@ -240,7 +240,12 @@ def mfp_main(args,comm,size,rank):
                             # shift the envelope
                             data_env_shift = data_env - np.std(data_env)*args.envelope_snr
                             data_env_shift[data_env_shift<0] = 0                                                                                 
-                            MFP_phases_dict[f"{phase_1}-{phase_2}"][meth_idx][k] += data_env_shift[corr_idx] * A 
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][meth_idx][k] += data_env_shift[corr_idx] * A
+                        elif meth == "square_envelope_snr":
+                            # shift the envelope
+                            data_env_shift = data_env - np.std(data_env)*args.envelope_snr
+                            data_env_shift[data_env_shift<0] = 0                                                                                 
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][meth_idx][k] += np.power(data_env_shift[corr_idx],2) * A
                         else:
                             print(f"{meth} not implemented.")
 
@@ -256,6 +261,12 @@ def mfp_main(args,comm,size,rank):
                             data_env_shift = data_env - np.std(data_env)*args.envelope_snr
                             data_env_shift[data_env_shift<0] = 0                                                                                 
                             MFP_phases_dict[f"{phase_1}-{phase_2}"][meth_idx][k] += data_env_shift[corr_idx]
+                        elif meth == "square_envelope_snr":
+                            # shift the envelope
+                            data_env_shift = data_env - np.std(data_env)*args.envelope_snr
+                            data_env_shift[data_env_shift<0] = 0                                                                                 
+                            MFP_phases_dict[f"{phase_1}-{phase_2}"][meth_idx][k] += np.power(data_env_shift[corr_idx],2)
+                    
                         else:
                             print(f"{meth} not implemented.")
                         
