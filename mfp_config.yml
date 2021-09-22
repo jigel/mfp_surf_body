@@ -1,20 +1,20 @@
 # give the project a name, for example herbert
-project_name: 0210_perth_5_stat_phase_P_PP_PPP
+project_name: 0301_mfp_2_8_kmps_lise_3_SQR_TEST_2 
 
 # In which folder do you want to save it?
-output_path: /Users/jigel/noisi/perth_project/mfp_stat_output
+output_path: ./mfp_output 
 
 # Where are the cross-correlations that should be used? If path is given and stationary phase is True, only correlations in this folder will be used
-correlation_path: null 
+correlation_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/corr_3
 
 # What file format are they? List with, e.g., ["SAC","sac"]
 corr_format: ["SAC","sac"]
 
 # What frequency band do you want to look at? Bandpass filter with [freq_min,freq_max,corners]. Set to null if data should not be filtered.
-bandpass_filter: null
+bandpass_filter: [0.1,0.2,5]
 
 # Which stations am I using?
-stationlist_path: /Users/jigel/noisi/perth_project/stations/stationlist_5.csv 
+stationlist_path: /Users/jigel/noisi/mfp_noisi/mfp_output/0120_lise_mfp_test/stationlist_all.csv 
 
 # Do you want to set a minimum and maximum inter-station distance? It's in degrees. Set to both to 0 or null if you want to use all cross-correlations.
 station_distance_min: 0
@@ -39,25 +39,25 @@ svp_grid_config:
     svp_lon_0: # Centre of the spatially variable grid (or grids if multiple are given)
     - 115.5
     svp_phi_min: # Minimum grid point distance in degrees
-    - 0.3
+    - 4
     svp_phi_max: # Maximum grid point distance in degrees
-    - 10
+    - 4
     svp_sigma: # Radius of area (in degrees) of high grid point density
-    - 5
+    - 20
 
-# What method should I use for the MFP? Should be a list. Currently available are: ["basic","envelope","envelope_snr"] where basic takes the value of the time series and envelope the value of the envelope
-method: ["basic"]
+# What method should I use for the MFP? Should be a list. Currently available are: ["basic","envelope","envelope_snr","square_envelope","square_envelope_snr"] where basic takes the value of the time series and envelope the value of the envelope
+method: ["basic","envelope","envelope_snr","square_envelope","square_envelope_snr"]
 # if envelope_snr is given as method, select value here. This will be multiplied with the standard deviation of the time series and then subtracted from the envelope. 
 envelope_snr: 2
 
 # Do you want to check the stationary phases? Creates a time series with the given input, either Ricker or Gauss, at the expected arrival time
-stationary_phases: True
+stationary_phases: False
 stat_phase_input: ricker
 # Parameters for the synthetic correlations, length of the correlation (in seconds) and delta between points (dt, 1/s)
 stat_phase_length: 5000
-stat_phase_dt: 1
+stat_phase_dt: 15
 # set sigma here (in seconds). For Gauss it is the variance, for Ricker the width parameter of the wavelet.
-stat_phase_sigma: 1
+stat_phase_sigma: 0.7
 # should it be on the causal, acausal, or both sides of the correlation?
 stat_phase_caus: both
 # Add phases for which stationary phase synthetic data should be created, i.e. at these arrivals the given wavelet will be added
@@ -67,15 +67,15 @@ stat_phase_main: ['P']
 # see https://docs.obspy.org/packages/obspy.taup.html for more details
 # Will iterate over this list. To set a speed in km per second use e.g. ['P','PP','3kmps'] 
 taup_model: 'iasp91'
-phases: ['P','PP','PPP']
+phases: ['2.8kmps']
 # set the phase pairs you want to look at for stationary phases. If set to all, the above list will be used. If set to same, only same pairs will be done, i.e. P-P, PP-PP, 3kmps-3kmps etc.
 # will be done in both directions, i.e. P-PP will also do PP-P
-phase_pairs: ['P-PP','PP-PPP']
+phase_pairs: same
 # Do you want 'auto'-phases like P-P when phase_pairs is set to all? This is automatically True if stationary phases is False or phase_pairs is same
 phase_pairs_auto: False
 
 # Sum up the given phase pairs to one map?
-phase_pairs_sum: True
+phase_pairs_sum: False
 
 # Should geometrical spreading be implement?
 # currently only works for phases where velocity is given, i.e. surface waves
