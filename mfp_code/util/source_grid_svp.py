@@ -289,7 +289,7 @@ def spherical_distance_degrees(lat1,lon1,lat2,lon2):
     return dist_deg
 
 
-def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gamma=[0],plot=False,dense_antipole=False,only_ocean=False):
+def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gamma=[0],plot=False,dense_antipole=False,only_ocean=False,max_dist=None):
     """
     This function creates several spatially variable grids. To turn them into one grid the variable gamma has to be defined. 
     The input should be arrays with the variables for the svp grid plus gamma.
@@ -305,9 +305,10 @@ def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gam
     # first check the number of grids given
     n_grids = np.size(sigma)
     #print("Number of grids: ", n_grids)
+    plot_grid = False
 
     if n_grids == 1:
-        grid = svp_grid_one(sigma[0],beta[0],phi_min[0],phi_max[0],lat_0[0],lon_0[0],plot,dense_antipole,only_ocean)
+        grid = svp_grid_one(sigma[0],beta[0],phi_min[0],phi_max[0],lat_0[0],lon_0[0],plot_grid,dense_antipole,only_ocean)
         final_grid_lon = grid[0]
         final_grid_lat = grid[1]
     else:
@@ -318,7 +319,7 @@ def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gam
         for i in range(0,n_grids):
             print('Grid {} of {}'.format(i+1,n_grids))
             grid_one = svp_grid_one(sigma[i],beta[i],phi_min[i],phi_max[i],lat_0[i],lon_0[i],
-                                  plot,dense_antipole,only_ocean)
+                                  plot_grid,dense_antipole,only_ocean)
             all_grids.append(grid_one)
             # different grids are now stored in all_grids
 
@@ -360,19 +361,42 @@ def svp_grid(sigma=[15],beta=[5],phi_min=[1],phi_max=[3],lat_0=[0],lon_0=[0],gam
                     final_grid_lat = np.append(final_grid_lat,all_grids[i+1][1][k])
                 else:
                     continue
+                    
+                    
+    ### remove all points that are outside the maximum distance given (in degrees)
+    
+    if max_dist is not None:
+        dist_from_centre = []
 
-        # plot
-        if plot:
-            plt.figure(figsize=(25,10))
-            ax = plt.axes(projection=ccrs.PlateCarree())
-            ax.coastlines()
-            #ax.set_extent([-180,180,-90,90])
+        final_grid_lon_dist = []
+        final_grid_lat_dist = []
 
-            plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.PlateCarree())
-            plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
-            plt.show(block=False)
-            #plt.close()
-        
+        for i in range(np.size(final_grid_lon)):
+
+            dist_centre_var = spherical_distance_degrees(final_grid_lat[i],final_grid_lon[i],lat_0[0],lon_0[0])
+            #dist_from_centre.append(dist_centre_var)
+
+            if dist_centre_var <= max_dist:
+                final_grid_lon_dist.append(final_grid_lon[i])
+                final_grid_lat_dist.append(final_grid_lat[i])
+                
+        final_grid_lat = final_grid_lat_dist
+        final_grid_lon = final_grid_lon_dist
+                 
+
+    # plot
+    if plot:
+        plt.figure(figsize=(25,10))
+        ax = plt.axes(projection=ccrs.PlateCarree())
+        ax.coastlines()
+        ax.set_global()
+        #ax.set_extent([-180,180,-90,90])
+
+        plt.scatter(final_grid_lon,final_grid_lat,s=1,c='k',transform=ccrs.PlateCarree())
+        plt.title('Final grid with {} gridpoints'.format(np.size(final_grid_lon)))
+        plt.show(block=False)
+        #plt.close()
+
     
     #print('Final number of gridpoints:',np.size(final_grid_lon))
 

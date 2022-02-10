@@ -17,7 +17,8 @@ def create_sourcegrid(svp_grid_config):
     plot = svp_grid_config['svp_plot']
     dense_antipole = svp_grid_config['svp_dense_antipole']
     only_ocean = svp_grid_config['svp_only_ocean']
-    
-    sourcegrid = svp_grid(sigma,beta,phi_min,phi_max,lat_0,lon_0,gamma,plot,dense_antipole,only_ocean)
+    max_dist = svp_grid_config['svp_max_dist']
+                               
+    sourcegrid = svp_grid(sigma,beta,phi_min,phi_max,lat_0,lon_0,gamma,plot,dense_antipole,only_ocean,max_dist)
     
     return sourcegrid
