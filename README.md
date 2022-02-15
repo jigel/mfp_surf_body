@@ -1,5 +1,7 @@
-# mfp_stationary_phases
-Match Field Processing for stationary phases
+# mfp for avalanche detection
+
+This is a slimmed down version of the stationary phase code. 
+Match Field Processing for avalanche detection
 
 ## Packages
 - numpy
