@@ -1,5 +1,5 @@
-# mfp_stationary_phases
-Match Field Processing for stationary phases
+# MFP for surface and body waves
+Match Field Processing for surface and body waves.
 
 ## Packages
 - numpy
