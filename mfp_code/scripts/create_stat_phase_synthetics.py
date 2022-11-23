@@ -173,7 +173,8 @@ def create_synth(args,comm,size,rank):
                     spec = np.roll(ricker(np.size(tr_var.data),args.stat_phase_dt*args.stat_phase_sigma),int(arr*args.stat_phase_dt))
                     tr_var.data += spec
                 
-                
+            if args.stat_phase_input.lower() in ['constant']:
+                tr_var.data = np.ones(args.stat_phase_length*args.stat_phase_dt)
                     
             # write the correlation                  
             tr_var_name = f'{tr_var.stats.network}.{tr_var.stats.station}..{tr_var.stats.channel}--{tr_var.stats.sac.knetwk}.{tr_var.stats.sac.kevnm}..{tr_var.stats.sac.kcmpnm}'
